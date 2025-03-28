@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Nest - معرض الصور المميز</title>
+    <link rel="shortcut icon" href="1.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.1) 1px, transparent 2px),
+                radial-gradient(circle at 90% 80%, rgba(255,255,255,0.1) 1px, transparent 2px);
+            background-size: 3vw 3vh;
+            animation: twinkling 3s infinite alternate;
+            z-index: 0;
+        }
+
+        @keyframes twinkling {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-title {
+            text-align: center;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .header-title h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255, 60, 0, 0.5);
+            animation: titleGlow 2s infinite alternate;
+            padding: 15px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .header-title h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff4800, transparent);
+            transition: width 0.5s ease;
+        }
+
+        .header-title:hover h1::after {
+            width: 100%;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px #ff4800; }
+            50% { text-shadow: 0 0 20px #ff6600; }
+            100% { text-shadow: 0 0 10px #ff4800; }
+        }
+
+        header {
+            background: rgba(255, 72, 0, 0.2);
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 72, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 72, 0, 0.2);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(255, 72, 0, 0.3);
+            aspect-ratio: 4/3;
+            transition: all 0.3s ease;
+            cursor: zoom-in;
+        }
+
+        .gallery-img-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease, filter 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.5);
+            filter: brightness(1.1);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        .gallery-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-desc {
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease 0.1s;
+        }
+
+        .gallery-item:hover .gallery-title {
+            transform: translateY(0);
+        }
+
+        .gallery-item:hover .gallery-desc {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gallery-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 2px solid transparent;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-border {
+            border-color: rgba(255, 72, 0, 0.7);
+            box-shadow: inset 0 0 20px rgba(255, 72, 0, 0.3);
+        }
+
+        /* Lightbox Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        .modal-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            animation: zoomIn 0.3s ease;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #ff4800;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        .zoom-btn {
+            background: rgba(255, 72, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(255, 72, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            
+            .header-title h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-title h1 {
+                font-size: 1.8rem;
+            }
+            
+            .zoom-controls {
+                bottom: 15px;
+            }
+            
+            .zoom-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    
+    <div class="container">
+        <div class="header-title">
+            <h1>Social Nest</h1>
+        </div>
+
+        <header>
+            <h2>التصاميم الإعلانية</h2>
+            <p>جزء من تصميمات سوشيال نيست</p>
+        </header>
+
+        <div class="gallery">
+            <!-- الصورة 1 -->
+            <div class="gallery-item" onclick="openModal('Q.jpeg', 'تصميم جرافيكي', 'تصميم لوجو وهوية بصرية لشركة ناشئة')">
+                <div class="gallery-img-container">
+                    <img src="Q.jpeg" alt="تصميم جرافيكي">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title">تصميم جرافيكي</h3>
+                        <p class="gallery-desc">تصميم لوجو وهوية بصرية لشركة ناشئة</p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 2 -->
+            <div class="gallery-item" onclick="openModal('W.jpeg', 'ملصق إعلاني', 'حملة إعلانية لمهرجان ثقافي')">
+                <div class="gallery-img-container">
+                    <img src="W.jpeg" alt="ملصق إعلاني">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title">ملصق إعلاني</h3>
+                        <p class="gallery-desc">حملة إعلانية </p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 3 -->
+            <div class="gallery-item" onclick="openModal('E.jpeg', 'فن رقمي', 'تصميم ثلاثي الأبعاد لعلامة تجارية')">
+                <div class="gallery-img-container">
+                    <img src="E.jpeg" alt="فن رقمي">
+                    <div class="gallery-overlay">
+                      <h3 class="gallery-title">تصميم جرافيكي</h3>
+                        <p class="gallery-desc">تصميم لوجو وهوية بصرية لشركة ناشئة</p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 4 -->
+            <div class="gallery-item" onclick="openModal('A.jpeg', 'تصوير إبداعي', 'جلسة تصوير لمنتج تجميلي')">
+                <div class="gallery-img-container">
+                    <img src="A.jpeg" alt="تصوير إبداعي">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title">تصوير إبداعي</h3>
+                        <p class="gallery-desc">تصوير وتصميم إحترافي</p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 5 -->
+            <div class="gallery-item" onclick="openModal('S.jpeg', 'هوية بصرية', 'تصميم متكامل لمطعم راقي')">
+                <div class="gallery-img-container">
+                    <img src="S.jpeg" alt="هوية بصرية">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title">هوية بصرية</h3>
+                        <p class="gallery-desc">تصميم متكامل علشان تطييييير
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 6 -->
+            <div class="gallery-item" onclick="openModal('D.jpeg', 'موشن جرافيك', 'مقدمة رسوم متحركة لقناة يوتيوب')">
+                <div class="gallery-img-container">
+                    <img src="D.jpeg" alt="موشن جرافيك">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title"> تصميمات تجذب الإنظار </h3>
+                        <p class="gallery-desc"> تخيل شكل منتجاتك معانا</p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 7 -->
+            <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                <div class="gallery-img-container">
+                    <img src="F.jpeg" alt="رسم توضيحي">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                        <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+            <!-- الصورة 8 -->
+            <div class="gallery-item" onclick="openModal('Z.jpeg', 'تصاميم سوشيال ميديا', 'حملة شهرية لعلامة تجارية')">
+                <div class="gallery-img-container">
+                    <img src="Z.jpeg" alt="تصاميم سوشيال ميديا">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title">تصاميم سوشيال ميديا</h3>
+                        <p class="gallery-desc">حملة شهرية لعلامة تجارية</p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+
+
+             <!-- الصورة 9 -->
+             <div class="gallery-item" onclick="openModal('11.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                <div class="gallery-img-container">
+                    <img src="11.jpeg" alt="رسم توضيحي">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                        <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+             <!-- الصورة 10-->
+             <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                <div class="gallery-img-container">
+                    <img src="22.jpeg" alt="رسم توضيحي">
+                    <div class="gallery-overlay">
+                        <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                        <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                    </div>
+                    <div class="gallery-border"></div>
+                </div>
+            </div>
+
+  <!-- الصورة 10-->
+  <div class="gallery-item" onclick="openModal('33.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+    <div class="gallery-img-container">
+        <img src="33.jpeg" alt="رسم توضيحي">
+        <div class="gallery-overlay">
+            <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+            <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+        </div>
+        <div class="gallery-border"></div>
+    </div>
+</div>
+
+  <!-- الصورة 10-->
+  <div class="gallery-item" onclick="openModal('44.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+    <div class="gallery-img-container">
+        <img src="44.jpeg" alt="رسم توضيحي">
+        <div class="gallery-overlay">
+            <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+            <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+        </div>
+        <div class="gallery-border"></div>
+    </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('55.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="55.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="66.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="77.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="88.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="99.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="10.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="111.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="12.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+       <div class="gallery-border"></div>
+   </div>
+</div>  <!-- الصورة 10-->
+<div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+   <div class="gallery-img-container">
+       <img src="13.jpeg" alt="رسم توضيحي">
+       <div class="gallery-overlay">
+           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+       </div>
+    </div>  <!-- الصورة 10-->
+    <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+       <div class="gallery-img-container">
+           <img src="14.jpeg" alt="رسم توضيحي">
+           <div class="gallery-overlay">
+               <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+               <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+           </div></div>  <!-- الصورة 10-->
+           <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+              <div class="gallery-img-container">
+                  <img src="15.jpeg" alt="رسم توضيحي">
+                  <div class="gallery-overlay">
+                      <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                      <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                  </div></div>  <!-- الصورة 10-->
+                  <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                     <div class="gallery-img-container">
+                         <img src="16.jpeg" alt="رسم توضيحي">
+                         <div class="gallery-overlay">
+                             <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                             <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                         </div></div>  <!-- الصورة 10-->
+                         <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                            <div class="gallery-img-container">
+                                <img src="17.jpeg" alt="رسم توضيحي">
+                                <div class="gallery-overlay">
+                                    <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                    <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                </div></div>  <!-- الصورة 10-->
+                                <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                   <div class="gallery-img-container">
+                                       <img src="18.jpeg" alt="رسم توضيحي">
+                                       <div class="gallery-overlay">
+                                           <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                           <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                       </div></div>  <!-- الصورة 10-->
+                                       <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                          <div class="gallery-img-container">
+                                              <img src="19.jpeg" alt="رسم توضيحي">
+                                              <div class="gallery-overlay">
+                                                  <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                                  <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                              </div></div>  <!-- الصورة 10-->
+                                              <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                                 <div class="gallery-img-container">
+                                                     <img src="20.jpeg" alt="رسم توضيحي">
+                                                     <div class="gallery-overlay">
+                                                         <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                                         <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                                     </div></div>  <!-- الصورة 10-->
+                                                     <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                                        <div class="gallery-img-container">
+                                                            <img src="21.jpeg" alt="رسم توضيحي">
+                                                            <div class="gallery-overlay">
+                                                                <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                                                <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                                            </div></div>  <!-- الصورة 10-->
+                                                            <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                                               <div class="gallery-img-container">
+                                                                   <img src="222.jpeg" alt="رسم توضيحي">
+                                                                   <div class="gallery-overlay">
+                                                                       <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                                                       <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                                                   </div></div>  <!-- الصورة 10-->
+                                                                   <div class="gallery-item" onclick="openModal('F.jpeg', 'رسم توضيحي', 'تصاميم لكتاب أطفال')">
+                                                                      <div class="gallery-img-container">
+                                                                          <img src="23.jpeg" alt="رسم توضيحي">
+                                                                          <div class="gallery-overlay">
+                                                                              <h3 class="gallery-title"> تصميماتنا هتجبلك العملاء </h3>
+                                                                              <p class="gallery-desc"> سوشيال نيست  يعني كل ال نفسك فية </p>
+                                                                          </div>
+
+
+
+       <div class="gallery-border"></div>
+   </div>
+
+
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" class="modal-img" src="" alt="">
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="resetZoom()">↻</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        
+        function openModal(src, title, desc) {
+            modal.style.display = "flex";
+            modalImg.src = src;
+            modalImg.alt = title;
+            currentZoom = 1;
+            modalImg.style.transform = "scale(1)";
+            document.body.style.overflow = "hidden";
+        }
+        
+        function closeModal() {
+            modal.style.display = "none";
+            document.body.style.overflow = "auto";
+        }
+        
+        function zoomIn() {
+            currentZoom += 0.2;
+            modalImg.style.transform = `scale(${currentZoom})`;
+        }
+        
+        function zoomOut() {
+            if (currentZoom > 0.5) {
+                currentZoom -= 0.2;
+                modalImg.style.transform = `scale(${currentZoom})`;
+            }
+        }
+        
+        function resetZoom() {
+            currentZoom = 1;
+            modalImg.style.transform = "scale(1)";
+        }
+        
+        // Close modal when clicking outside the image
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape") {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
